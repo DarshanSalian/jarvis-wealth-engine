@@ -1,6 +1,6 @@
 ﻿
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -19,8 +19,10 @@ export default function Home() {
 
   const handleCommand = async (e) => {
     e.preventDefault();
-    if (!input) return;
-    const parts = input.trim().split(/\s+/);
+    const currentInput = input.trim();
+    if (!currentInput) return;
+    
+    const parts = currentInput.split(/\s+/);
     const cmd = parts[0].toLowerCase();
 
     if (cmd === "fetch") {
@@ -58,19 +60,40 @@ export default function Home() {
           <div className="border border-green-800 p-4 h-64 overflow-y-auto bg-green-950/5">
              <h2 className="text-[10px] text-green-800 mb-2 uppercase tracking-widest">[Live_Holdings]</h2>
              <table className="w-full text-xs">
-               <thead><tr className="text-left border-b border-green-900 opacity-50"><th>ASSET</th><th>QTY</th><th>VAL</th></tr></thead>
-               <tbody>{holdings.map((h,i)=>(<tr key={i} className="hover:bg-green-500/10"><td className="py-1">{h.symbol}</td><td>{h.quantity}</td><td>${h.price}</td></tr>))}</tbody>
+               <thead>
+                 <tr className="text-left border-b border-green-900 opacity-50">
+                   <th className="pb-1">ASSET</th>
+                   <th className="pb-1">QTY</th>
+                   <th className="pb-1">VAL</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {holdings.map((h, i) => (
+                   <tr key={i} className="hover:bg-green-500/10">
+                     <td className="py-1">{h.symbol}</td>
+                     <td>{h.quantity}</td>
+                     <td>${h.price}</td>
+                   </tr>
+                 ))}
+               </tbody>
              </table>
           </div>
           <div className="border border-green-800 p-4 h-64 overflow-y-auto bg-black text-[10px]">
              <h2 className="text-[10px] text-green-800 mb-2 uppercase tracking-widest">[System_Logs]</h2>
-             {logs.map((l,i)=>(<p key={i} className="mb-1 text-white opacity-70">{l}</p>))}
+             {logs.map((l, i) => (
+               <p key={i} className="mb-1 text-white opacity-70">{l}</p>
+             ))}
           </div>
         </div>
 
         <form onSubmit={handleCommand} className="flex gap-2 bg-green-950/20 p-2 border border-green-900">
           <span className="text-white font-bold">$</span>
-          <input className="bg-transparent outline-none w-full text-green-400" value={input} onChange={e=>setInput(e.target.value)} placeholder="Type add SYMBOL QTY PRICE..."/>
+          <input 
+            className="bg-transparent outline-none w-full text-green-400" 
+            value={input} 
+            onChange={(e) => setInput(e.target.value)} 
+            placeholder="Type add SYMBOL QTY PRICE..."
+          />
         </form>
       </div>
     </main>
