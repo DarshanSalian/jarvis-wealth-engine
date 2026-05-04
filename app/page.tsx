@@ -1,1 +1,68 @@
-﻿export default function Home() { return ( <main className="min-h-screen bg-black text-green-500 font-mono p-4 md:p-8"> <div className="max-w-4xl mx-auto border border-green-900 p-6 rounded-lg shadow-lg shadow-green-500/20"> <div className="flex justify-between items-start mb-8"> <div> <h1 className="text-3xl md:text-4xl uppercase tracking-widest">Darshan Salian</h1> <p className="text-green-800 tracking-tighter">ROLE: SYSTEMS_ARCHITECT // SEC_SPECIALIST</p> </div> <div className="text-right text-xs opacity-50"> <p>LOC: 12.8448 N, 77.6632 E (ECITY, BLR)</p> <p>STATUS: ACTIVE_PIVOT_45LPA</p> </div> </div> <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"> <div className="border border-green-800 p-4 bg-green-950/10"> <h2 className="text-white font-bold mb-2 tracking-widest">[EXP: SIEMENS]</h2> <p className="text-sm opacity-80">Factory Automation Firmware. Focus: Industrial IoT Security & Secure Boot.</p> </div> <div className="border border-green-800 p-4 bg-green-950/10"> <h2 className="text-white font-bold mb-2 tracking-widest">[PROJECT: JARVIS]</h2> <p className="text-sm opacity-80">Agentic Wealth Engine via Python MCP. Real-time analysis with ZK-Proof logic.</p> </div> </div> <div className="border border-green-900 bg-black p-4 rounded font-mono text-sm mb-6"> <div className="flex gap-2 mb-2"><span className="w-3 h-3 rounded-full bg-red-500"></span><span className="w-3 h-3 rounded-full bg-yellow-500"></span><span className="w-3 h-3 rounded-full bg-green-500"></span></div> <p className="text-green-400 font-bold">$ jarvis --greet</p> <p className="text-white">&gt; Guten Tag! System bereit für die Analyse.</p> <p className="text-green-400 mt-2 font-bold">$ jarvis --analyze-pivot</p> <p className="text-white">&gt; Status: Advancing to AI-Security Architecture.</p> </div> <div className="flex gap-4 text-xs"> <a href="https://github.com/DarshanSalian/jarvis-wealth-engine" className="border border-green-700 px-3 py-1 hover:bg-green-700 hover:text-black transition">VIEW_SOURCE</a> <a href="https://www.linkedin.com/in/darshan-salian/" className="border border-green-700 px-3 py-1 hover:bg-green-700 hover:text-black transition">LINKEDIN</a> </div> </div> </main> ); }
+﻿
+"use client";
+import { useState, useEffect } from "react";
+
+export default function Home() {
+  const [input, setInput] = useState("");
+  const [logs, setLogs] = useState(["System Online. Commands: fetch, add [symbol] [qty] [price]"]);
+  const [holdings, setHoldings] = useState([]);
+
+  const refreshData = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/holdings");
+      const data = await res.json();
+      setHoldings(data.assets || []);
+    } catch (e) { setLogs(p => [...p, "> Local Engine Offline"]); }
+  };
+
+  const handleCommand = async (e) => {
+    e.preventDefault();
+    const parts = input.split(" ");
+    const cmd = parts[0].toLowerCase();
+
+    if (cmd === "fetch") {
+      await refreshData();
+      setLogs(p => [...p, "> Data Refreshed."]);
+    } else if (cmd === "add" && parts.length === 4) {
+      const payload = { symbol: parts[1].toUpperCase(), quantity: parseFloat(parts[2]), price: parseFloat(parts[3]) };
+      await fetch("http://localhost:5000/api/holdings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setLogs(p => [...p, `> Added ${parts[1]}`]);
+      await refreshData();
+    }
+    setInput("");
+  };
+
+  return (
+    <main className="min-h-screen bg-black text-green-500 font-mono p-8">
+      <div className="max-w-4xl mx-auto border border-green-900 p-6 shadow-2xl">
+        <h1 className="text-xl mb-4 border-b border-green-900 pb-2 uppercase tracking-widest text-white">Jarvis Command Interface</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Investment Table */}
+          <div className="border border-green-800 p-4 h-64 overflow-y-auto bg-green-950/5">
+             <h2 className="text-[10px] text-green-800 mb-2 uppercase tracking-widest">[Live_Holdings]</h2>
+             <table className="w-full text-xs">
+               <thead><tr className="text-left border-b border-green-900"><th>ASSET</th><th>QTY</th><th>VAL</th></tr></thead>
+               <tbody>{holdings.map((h,i)=>(<tr key={i} className="hover:bg-green-500/10"><td className="py-1">{h.symbol}</td><td>{h.quantity}</td><td>${h.price}</td></tr>))}</tbody>
+             </table>
+          </div>
+          {/* System Logs */}
+          <div className="border border-green-800 p-4 h-64 overflow-y-auto bg-black text-[10px]">
+             <h2 className="text-[10px] text-green-800 mb-2 uppercase tracking-widest">[System_Logs]</h2>
+             {logs.map((l,i)=>(<p key={i} className="mb-1 text-white opacity-70">{l}</p>))}
+          </div>
+        </div>
+
+        {/* Interaction Bar */}
+        <form onSubmit={handleCommand} className="flex gap-2 bg-green-950/20 p-2 border border-green-900">
+          <span className="text-white font-bold">$</span>
+          <input className="bg-transparent outline-none w-full text-green-400" value={input} onChange={e=>setInput(e.target.value)} placeholder="Type add SYMBOL QTY PRICE..."/>
+        </form>
+      </div>
+    </main>
+  );
+}
