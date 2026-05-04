@@ -1,6 +1,37 @@
 ﻿
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+
+// Component to handle Advanced TradingView Chart
+const TradingViewChart = ({ symbol }: { symbol: string }) => {
+  const container = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!container.current) return;
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.type = "text/javascript";
+    script.onload = () => {
+      if ((window as any).TradingView) {
+        new (window as any).TradingView.widget({
+          "autosize": true,
+          "symbol": symbol,
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "container_id": "tv_chart_container"
+        });
+      }
+    };
+    container.current.appendChild(script);
+  }, [symbol]);
+
+  return <div id="tv_chart_container" className="w-full h-full" ref={container} />;
+};
 
 export default function Home() {
   const [marketData, setMarketData] = useState<any[]>([]);
@@ -24,14 +55,9 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // MASTER RESOLVER: Ensures TradingView identifies the correct exchange
   const getFullSymbol = (s: any) => {
     if (s.market === "NSE") return `NSE:${s.symbol}`;
-    if (s.market === "CRYPTO") {
-      // Formats BTC-USD to BINANCE:BTCUSDT for the widget
-      const cleanCrypto = s.symbol.replace("-USD", "").replace("-", "");
-      return `BINANCE:${cleanCrypto}USDT`;
-    }
+    if (s.market === "CRYPTO") return `BINANCE:${s.symbol.replace("-USD", "USDT")}`;
     return `NASDAQ:${s.symbol}`;
   };
 
@@ -43,19 +69,19 @@ export default function Home() {
         <section className="border-l-2 border-green-900 pl-8 space-y-6">
           <header>
             <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">DARSHAN SALIAN</h1>
-            <p className="text-lg text-green-700 font-bold uppercase tracking-widest mt-2 text-xs md:text-sm italic">Systems Developer // Cybersecurity Specialist // Siemens Alumni</p>
+            <p className="text-lg text-green-700 font-bold uppercase tracking-widest mt-2 text-xs md:text-sm">Systems Developer // Cybersecurity Specialist // Siemens Alumni</p>
           </header>
           <div className="grid md:grid-cols-2 gap-10 text-sm opacity-80 leading-relaxed">
             <div className="space-y-4">
-               <p><span className="text-white font-bold underline text-[10px]">EXPERIENCE:</span> Currently Software Developer at <span className="text-white">Siemens</span>. Cybersecurity Intern (VA/PT).</p>
+               <p><span className="text-white font-bold underline text-[10px]">EXPERIENCE:</span> Currently Software Developer at Siemens. Cybersecurity Intern (VA/PT).</p>
                <p><span className="text-white font-bold underline text-[10px]">EDUCATION:</span> ISE Graduate (2025), NITTE Alumni.</p>
             </div>
             <div className="space-y-4 border-l border-green-900/30 pl-6">
                <div className="flex gap-4">
-                  <a href="https://github.com/DarshanSalian" target="_blank" className="hover:text-white underline">GITHUB</a>
-                  <a href="https://linkedin.com/in/darshansalian" target="_blank" className="hover:text-white underline">LINKEDIN</a>
+                  <a href="https://github.com/DarshanSalian" target="_blank" className="hover:text-white underline text-[10px]">GITHUB</a>
+                  <a href="https://linkedin.com/in/darshansalian" target="_blank" className="hover:text-white underline text-[10px]">LINKEDIN</a>
                </div>
-               <p className="text-[10px] text-green-900 font-bold uppercase">Skills: Python, Next.js, Kali Linux, Network Security.</p>
+               <p className="text-[10px] text-green-900 font-bold uppercase mt-2">Skills: Python, Next.js, Kali Linux, Network Security.</p>
             </div>
           </div>
         </section>
@@ -67,7 +93,7 @@ export default function Home() {
               <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
               JARVIS_TERMINAL_O1
             </h2>
-            <p className="text-[9px] opacity-40 uppercase">Pulse_Rate: 1Hz // Sync_ID: {lastSync}</p>
+            <p className="text-[9px] opacity-40 uppercase">Freq: 1Hz // Last_Sync: {lastSync}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -85,21 +111,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- FULLSCREEN CHART MODAL --- */}
+        {/* --- ADVANCED CHART MODAL --- */}
         {selectedStock && (
           <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 md:p-6 backdrop-blur-md">
             <div className="bg-[#0a0a0a] border border-green-500 w-full max-w-6xl h-[90vh] rounded shadow-2xl flex flex-col">
               <div className="p-4 border-b border-green-900 flex justify-between bg-green-950/20">
-                <span className="text-white font-bold italic uppercase text-[10px]">Security_Analysis: {getFullSymbol(selectedStock)}</span>
+                <span className="text-white font-bold italic uppercase text-[10px]">Advanced_Analysis: {getFullSymbol(selectedStock)}</span>
                 <button onClick={() => setSelectedStock(null)} className="text-green-500 hover:text-white font-bold border border-green-900 px-2 text-xs">EXIT_STREAM [X]</button>
               </div>
-              <div className="flex-1">
-                <iframe 
-                  key={selectedStock.symbol}
-                  className="w-full h-full"
-                  src={`https://s.tradingview.com/widgetembed/?symbol=${getFullSymbol(selectedStock)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&locale=en&withdateranges=true`}
-                  frameBorder="0"
-                ></iframe>
+              <div className="flex-1 bg-black">
+                <TradingViewChart symbol={getFullSymbol(selectedStock)} />
               </div>
             </div>
           </div>
