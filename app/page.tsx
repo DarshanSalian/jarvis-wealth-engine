@@ -5,87 +5,95 @@ import React, { useState, useEffect } from "react";
 export default function Home() {
   const [marketData, setMarketData] = useState<any[]>([]);
   const [selectedStock, setSelectedStock] = useState<any | null>(null);
-  const [logs, setLogs] = useState<string[]>(["Jarvis OS v4.2 Status: Optimized"]);
+  const [lastSync, setLastSync] = useState<string>("");
 
   const syncMarket = async () => {
-    setLogs(p => [...p, "> Parallel data fetch initiated..."]);
     try {
       const res = await fetch("http://localhost:5000/api/market-live");
       const data = await res.json();
       setMarketData(data.assets || []);
-      setLogs(p => [...p, "> Sync Complete. Latency: < 3s"]);
-    } catch (e) {
-      setLogs(p => [...p, "> Error: Backend Engine Offline."]);
-    }
+      setLastSync(new Date().toLocaleTimeString());
+    } catch (e) { console.error("Sync Failed"); }
   };
 
-  useEffect(() => { syncMarket(); }, []);
-
-  // Helper to format symbol for TradingView
-  const getGraphSymbol = (stock: any) => {
-    if (stock.market === "NSE") return `NSE:${stock.symbol}`;
-    if (stock.market === "CRYPTO") return `BINANCE:${stock.symbol.replace("-", "")}`;
-    return `NASDAQ:${stock.symbol}`;
-  };
+  // AUTOMATIC REFRESH ENGINE (Every 30 Seconds)
+  useEffect(() => {
+    syncMarket();
+    const interval = setInterval(syncMarket, 30000); 
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#050505] text-green-500 font-mono p-4 md:p-12">
-      <div className="max-w-6xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-16">
         
-        <header className="border-b border-green-900/40 pb-10">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-            <div>
-              <h1 className="text-5xl font-black text-white italic tracking-tighter">DARSHAN SALIAN</h1>
-              <p className="text-green-800 font-bold mt-1 tracking-widest text-xs">SYSTEMS // CYBERSECURITY // SIEMENS ALUMNI</p>
+        {/* --- 1. PORTFOLIO DETAILS (Restored) --- */}
+        <section className="border-l-2 border-green-900 pl-8 space-y-6">
+          <header>
+            <h1 className="text-5xl font-black text-white italic tracking-tighter">DARSHAN SALIAN</h1>
+            <p className="text-lg text-green-700 font-bold uppercase tracking-widest mt-2">Systems Developer // Cybersecurity Specialist</p>
+          </header>
+          <div className="grid md:grid-cols-2 gap-10 text-sm opacity-80 leading-relaxed">
+            <div className="space-y-4">
+               <p><span className="text-white font-bold underline">EXPERIENCE:</span> Currently Software Developer at <span className="text-white">Siemens</span> (Factory Automation). Previously Cybersecurity Intern focused on Pentesting and Vulnerability Assessment.</p>
+               <p><span className="text-white font-bold underline">EDUCATION:</span> ISE Graduate (2025), NITTE Alumni.</p>
             </div>
-            <div className="flex gap-2">
-              <a href="https://github.com/DarshanSalian" target="_blank" className="border border-green-800 px-4 py-2 text-[10px] hover:bg-green-500 hover:text-black transition-all">GITHUB</a>
-              <a href="https://linkedin.com/in/darshansalian" target="_blank" className="border border-green-800 px-4 py-2 text-[10px] hover:bg-green-500 hover:text-black transition-all">LINKEDIN</a>
+            <div className="space-y-4 border-l border-green-900/30 pl-6">
+               <div className="flex gap-4">
+                  <a href="https://github.com/DarshanSalian" target="_blank" className="hover:text-white underline">GITHUB</a>
+                  <a href="https://linkedin.com/in/darshansalian" target="_blank" className="hover:text-white underline">LINKEDIN</a>
+               </div>
+               <p className="text-[10px] text-green-900 font-bold uppercase">Skills: Python, Next.js, Kali Linux, Network Security, German (A1).</p>
             </div>
-          </div>
-        </header>
-
-        <section className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xs font-bold text-white tracking-widest">[LIVE_MARKET_STREAM]</h2>
-            <button onClick={syncMarket} className="text-[10px] border border-green-700 px-3 py-1 hover:bg-green-500 hover:text-black">REFRESH_ALL</button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            {marketData.length > 0 ? marketData.map((s, i) => (
-              <div key={i} onClick={() => setSelectedStock(s)} className="border border-green-900/50 bg-green-950/5 p-4 rounded cursor-pointer hover:border-green-400 transition-all group">
-                <div className="flex justify-between">
-                  <span className="text-white font-bold">{s.symbol}</span>
-                  <span className={`text-[10px] ${s.change >= 0 ? "text-green-500" : "text-red-500"}`}>{s.change}%</span>
-                </div>
-                <div className="text-2xl text-white mt-4 font-mono">${s.price}</div>
-              </div>
-            )) : <p className="opacity-40 italic text-xs">Waking up Jarvis Engine...</p>}
           </div>
         </section>
 
-        {selectedStock && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-[#0a0a0a] border border-green-500 w-full max-w-6xl h-[85vh] rounded-lg overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-green-900 flex justify-between bg-green-950/20">
-                <span className="text-white font-bold tracking-tighter italic">ANALYSIS_TERMINAL: {selectedStock.symbol}</span>
-                <button onClick={() => setSelectedStock(null)} className="text-green-500 hover:text-white">CLOSE_SESSION [X]</button>
+        {/* --- 2. LIVE DYNAMIC MARKET ENGINE --- */}
+        <section className="space-y-6">
+          <div className="flex justify-between items-end border-b border-green-900/40 pb-4">
+            <div>
+              <h2 className="text-xs font-bold text-white tracking-[0.4em] uppercase">Jarvis_Wealth_Live</h2>
+              <p className="text-[9px] opacity-40 mt-1">AUTO_SYNC_ACTIVE // LAST_UPDATE: {lastSync}</p>
+            </div>
+            <button onClick={syncMarket} className="text-[10px] border border-green-700 px-4 py-1 hover:bg-green-500 hover:text-black transition-all">MANUAL_REFRESH</button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+            {marketData.map((s, i) => (
+              <div key={i} onClick={() => setSelectedStock(s)} className="border border-green-900/50 bg-green-950/5 p-4 rounded hover:border-white cursor-pointer transition-all group">
+                <div className="flex justify-between items-start">
+                  <span className="text-white font-bold group-hover:text-green-400">{s.symbol}</span>
+                  <span className={`text-[10px] font-bold ${s.change >= 0 ? "text-green-500" : "text-red-500"}`}>
+                    {s.change >= 0 ? "▲" : "▼"}{Math.abs(s.change)}%
+                  </span>
+                </div>
+                <div className="text-2xl text-white mt-4 font-mono">${s.price}</div>
+                <div className="w-full bg-green-900/20 h-[2px] mt-4 overflow-hidden">
+                   <div className="bg-green-500 h-full animate-pulse" style={{width: "100%"}}></div>
+                </div>
               </div>
-              <div className="flex-1">
+            ))}
+          </div>
+        </section>
+
+        {/* --- 3. LIVE ANALYSIS (Graph) --- */}
+        {selectedStock && (
+          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#0a0a0a] border border-green-500 w-full max-w-6xl h-[85vh] rounded shadow-2xl flex flex-col">
+              <div className="p-4 border-b border-green-900 flex justify-between bg-green-950/20">
+                <span className="text-white font-bold italic">ANALYSIS_TERMINAL: {selectedStock.symbol}</span>
+                <button onClick={() => setSelectedStock(null)} className="text-green-500 hover:text-white">CLOSE [X]</button>
+              </div>
+              <div className="flex-1 bg-black">
                 <iframe 
                   className="w-full h-full"
-                  src={`https://s.tradingview.com/widgetembed/?symbol=${getGraphSymbol(selectedStock)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&locale=en`}
+                  src={`https://s.tradingview.com/widgetembed/?symbol=${selectedStock.market === "NSE" ? "NSE:" : selectedStock.market === "CRYPTO" ? "BINANCE:" : "NASDAQ:"}${selectedStock.symbol}${selectedStock.market === "CRYPTO" ? "USDT" : ""}&interval=D&theme=dark&style=1`}
                   frameBorder="0"
                 ></iframe>
               </div>
             </div>
           </div>
         )}
-
-        <div className="border border-green-900 bg-black p-4 text-[10px] h-32 overflow-y-auto">
-          <p className="text-green-900 mb-2 underline">SYSTEM_LOGS</p>
-          {logs.map((l, i) => <p key={i} className="opacity-60">{l}</p>)}
-        </div>
       </div>
     </main>
   );
