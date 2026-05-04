@@ -1,93 +1,105 @@
 ﻿
 "use client";
-import React, { useState, FormEvent, ChangeEvent } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Home() {
-  const [input, setInput] = useState<string>("");
-  const [logs, setLogs] = useState<string[]>(["System Online. Ready for commands."]);
+  const [input, setInput] = useState("");
+  const [logs, setLogs] = useState(["Jarvis OS v2.0 Initialized..."]);
   const [holdings, setHoldings] = useState<any[]>([]);
 
-  async function refreshData(): Promise<void> {
+  const refreshData = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/holdings");
-      if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      if (data && data.assets) {
-        setHoldings(data.assets);
-      }
-    } catch (e) {
-      setLogs((prev) => [...prev, "> Local Engine Offline"]);
-    }
-  }
-
-  async function handleCommand(e: FormEvent<HTMLFormElement>): Promise<void> {
-    e.preventDefault();
-    const val = input.trim();
-    if (!val) return;
-    
-    const parts = val.split(" ");
-    const cmd = parts[0].toLowerCase();
-
-    if (cmd === "fetch") {
-      await refreshData();
-      setLogs((prev) => [...prev, "> Data Refreshed"]);
-    } else if (cmd === "add" && parts.length === 4) {
-      try {
-        const response = await fetch("http://localhost:5000/api/holdings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            symbol: parts[1].toUpperCase(),
-            quantity: Number(parts[2]),
-            price: Number(parts[3])
-          })
-        });
-        if (response.ok) {
-          setLogs((prev) => [...prev, `> Added ${parts[1]}`]);
-          await refreshData();
-        }
-      } catch (err) {
-        setLogs((prev) => [...prev, "> Write Error"]);
-      }
-    } else {
-      setLogs((prev) => [...prev, `> Unknown: ${cmd}`]);
-    }
-    setInput("");
-  }
+      setHoldings(data.assets || []);
+      setLogs(p => [...p, "> Market Data Sync Complete."]);
+    } catch (e) { setLogs(p => [...p, "> Connection Error: Is server.py running?"]); }
+  };
 
   return (
-    <div className="min-h-screen bg-black text-green-500 font-mono p-4">
-      <div className="max-w-4xl mx-auto border border-green-900 p-4 bg-black">
-        <h1 className="text-white mb-4 border-b border-green-900 pb-2">JARVIS COMMAND INTERFACE</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="border border-green-800 p-2 h-64 overflow-auto">
-            <p className="text-[10px] text-green-800 mb-2">[HOLDINGS]</p>
-            <table className="w-full text-xs">
-              <thead><tr className="text-left opacity-50"><th className="pb-1">SYM</th><th className="pb-1">QTY</th><th className="pb-1">PRICE</th></tr></thead>
+    <main className="min-h-screen bg-black text-green-500 font-mono p-6 md:p-12 space-y-16">
+      
+      {/* PORTFOLIO SECTION (The "Old" Website) */}
+      <section className="max-w-4xl mx-auto border-l-2 border-green-900 pl-8 space-y-6">
+        <header>
+          <h1 className="text-5xl font-bold text-white tracking-tighter">DARSHAN SALIAN</h1>
+          <p className="text-xl text-green-700 mt-2">Software Developer // Cybersecurity Aspirant</p>
+        </header>
+
+        <div className="grid md:grid-cols-2 gap-10">
+          <div className="space-y-4">
+            <h2 className="text-white border-b border-green-900 w-fit pr-4">EXPERIENCE</h2>
+            <div className="text-sm">
+              <p className="text-white font-bold">Siemens</p>
+              <p className="opacity-70">Software Developer (Factory Automation)</p>
+              <p className="text-[10px] opacity-40">2025 - PRESENT</p>
+            </div>
+            <div className="text-sm">
+              <p className="text-white font-bold">Cybersecurity Intern</p>
+              <p className="opacity-70">Vulnerability Assessment & Pentesting</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-white border-b border-green-900 w-fit pr-4">TECH_STACK</h2>
+            <p className="text-sm opacity-80 leading-relaxed">
+              Python, React/Next.js, Kali Linux, Network Security, C++, German (A1).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* WEALTH ENGINE SECTION (The "New" Utility) */}
+      <section className="max-w-5xl mx-auto space-y-4">
+        <div className="flex justify-between items-end">
+          <h2 className="text-xs text-white uppercase tracking-[0.3em]">[Jarvis_Wealth_Engine]</h2>
+          <button onClick={refreshData} className="text-[10px] border border-green-800 px-3 py-1 hover:bg-green-500 hover:text-black">RUN_SYNC</button>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 border border-green-900 bg-green-950/5 p-4 overflow-x-auto min-h-[300px]">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-green-900 text-green-800">
+                  <th className="pb-2">ASSET</th>
+                  <th className="pb-2 text-right">QTY</th>
+                  <th className="pb-2 text-right">LIVE_PRICE</th>
+                  <th className="pb-2 text-right">NET_VALUE</th>
+                </tr>
+              </thead>
               <tbody>
                 {holdings.map((h, i) => (
-                  <tr key={`asset-${i}`}><td className="py-1">{h.symbol}</td><td>{h.quantity}</td><td>${h.price}</td></tr>
+                  <tr key={i} className="border-b border-green-950/20 hover:bg-green-500/5">
+                    <td className="py-4 font-bold text-white">{h.symbol}</td>
+                    <td className="text-right">{h.quantity}</td>
+                    <td className="text-right text-white">${h.live_price || "0.00"}</td>
+                    <td className="text-right text-green-400 font-bold">
+                      ${(h.quantity * (h.live_price || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="border border-green-800 p-2 h-64 overflow-auto text-[10px] text-white">
-            <p className="text-[10px] text-green-800 mb-2">[SYSTEM_LOGS]</p>
-            {logs.map((l, i) => (
-              <p key={`log-${i}`} className="opacity-70 mb-1">{l}</p>
-            ))}
+
+          <div className="border border-green-900 bg-black p-4 flex flex-col h-full">
+            <div className="flex-1 text-[10px] opacity-60 overflow-y-auto mb-4">
+              {logs.map((l, i) => <p key={i} className="mb-1">{l}</p>)}
+            </div>
+            <div className="flex gap-2 border-t border-green-900 pt-2 text-xs">
+              <span className="text-white opacity-50">$</span>
+              <input 
+                className="bg-transparent outline-none w-full" 
+                placeholder="type commands..." 
+                value={input} 
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && refreshData()}
+              />
+            </div>
           </div>
         </div>
-        <form onSubmit={handleCommand} className="flex gap-2 border border-green-900 p-2">
-          <span className="text-white">$</span>
-          <input 
-            className="bg-transparent outline-none w-full text-green-400" 
-            value={input} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)} 
-            autoComplete="off"
-          />
-        </form>
-      </div>
-    </div>
+      </section>
+
+    </main>
   );
 }
