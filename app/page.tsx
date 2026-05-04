@@ -18,7 +18,6 @@ export default function Home() {
     } catch (e) { console.error("Sync Failure"); }
   };
 
-  // HIGH-FREQUENCY REFRESH: 1 SECOND
   useEffect(() => {
     syncMarket();
     const interval = setInterval(syncMarket, 1000); 
@@ -50,15 +49,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- LIVE 1-SECOND MARKET ENGINE --- */}
+        {/* --- JARVIS_TERMINAL_O1 --- */}
         <section className="space-y-6">
           <div className="flex justify-between items-end border-b border-green-900/40 pb-4">
             <div>
               <h2 className="text-xs font-bold text-white tracking-[0.4em] uppercase flex items-center gap-2">
-                <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                LIVE_TICKER_1S
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                JARVIS_TERMINAL_O1
               </h2>
-              <p className="text-[9px] opacity-40 mt-1 uppercase">Syncing: {lastSync}</p>
+              <p className="text-[9px] opacity-40 mt-1 uppercase">Live Stream: {lastSync}</p>
             </div>
           </div>
 
@@ -82,8 +81,8 @@ export default function Home() {
           <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
             <div className="bg-[#0a0a0a] border border-green-500 w-full max-w-6xl h-[85vh] rounded shadow-2xl flex flex-col">
               <div className="p-4 border-b border-green-900 flex justify-between bg-green-950/20">
-                <span className="text-white font-bold italic uppercase text-xs">Analysis_Mode: {selectedStock.symbol}</span>
-                <button onClick={() => setSelectedStock(null)} className="text-green-500 hover:text-white">EXIT [X]</button>
+                <span className="text-white font-bold italic uppercase text-xs">Analysis: {selectedStock.symbol}</span>
+                <button onClick={() => setSelectedStock(null)} className="text-green-500 hover:text-white">CLOSE [X]</button>
               </div>
               <div className="flex-1">
                 <iframe 
