@@ -2,7 +2,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 
-// Component to handle Advanced TradingView Chart
 const TradingViewChart = ({ symbol }: { symbol: string }) => {
   const container = useRef<HTMLDivElement>(null);
 
@@ -11,19 +10,25 @@ const TradingViewChart = ({ symbol }: { symbol: string }) => {
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/tv.js";
     script.type = "text/javascript";
+    script.async = true;
     script.onload = () => {
       if ((window as any).TradingView) {
         new (window as any).TradingView.widget({
-          "autosize": true,
+          "width": "100%",
+          "height": "100%",
           "symbol": symbol,
           "interval": "D",
           "timezone": "Etc/UTC",
           "theme": "dark",
           "style": "1",
           "locale": "en",
+          "toolbar_bg": "#f1f3f6",
           "enable_publishing": false,
-          "allow_symbol_change": true,
-          "container_id": "tv_chart_container"
+          "hide_top_toolbar": false,
+          "hide_legend": false,
+          "save_image": false,
+          "container_id": "tv_chart_container",
+          "referral_id": "darshansalian"
         });
       }
     };
@@ -56,7 +61,11 @@ export default function Home() {
   }, []);
 
   const getFullSymbol = (s: any) => {
-    if (s.market === "NSE") return `NSE:${s.symbol}`;
+    if (s.market === "NSE") {
+      // TCS and HDFC sometimes work better on BSE for embedded widgets
+      if (["TCS", "HDFCBANK", "ADANIPOWER"].includes(s.symbol)) return `BSE:${s.symbol}`;
+      return `NSE:${s.symbol}`;
+    }
     if (s.market === "CRYPTO") return `BINANCE:${s.symbol.replace("-USD", "USDT")}`;
     return `NASDAQ:${s.symbol}`;
   };
